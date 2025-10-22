@@ -1,0 +1,59 @@
+package nes
+
+import "log"
+
+type NES struct {
+	cpu         *cpu
+	ppu         *ppu
+	controller1 *controller
+	controller2 *controller
+}
+
+func BootNES(rom []byte) *NES {
+	mapper, err := mapCartridge(rom)
+	if err != nil {
+		log.Fatal("Failed to read ROM\n", err)
+	}
+
+	ppuBus := &ppuBus{
+		m: mapper,
+	}
+	ppu := &ppu{
+		bus: ppuBus,
+	}
+	controller1 := &controller{}
+	controller2 := &controller{}
+	cpuBus := &cpuBus{
+		m:           mapper,
+		ppu:         ppu,
+		controller1: controller1,
+		controller2: controller2,
+	}
+	cpu := createCPU(cpuBus)
+	cpuBus.setDMACallback(cpu.dmaPause)
+	ppu.setNMICallback(cpu.sendNMI)
+
+	return &NES{
+		cpu:         cpu,
+		ppu:         ppu,
+		controller1: controller1,
+		controller2: controller2,
+	}
+}
+
+func (nes *NES) RunFrame() {
+	for i := 0; i < 29781; i++ {
+		nes.ppu.step()
+		nes.ppu.step()
+		nes.ppu.step()
+		nes.cpu.step()
+	}
+}
+
+func (nes *NES) ReceiveInput(buttonBit byte, pressed bool) {
+	nes.controller1.updateButton(buttonBit, pressed)
+}
+
+func (nes *NES) SetFrameCallback(frameCallback func([240][256]uint16)) {
+	nes.ppu.setFrameCallback(frameCallback)
+}
