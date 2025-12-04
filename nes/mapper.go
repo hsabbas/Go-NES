@@ -9,10 +9,6 @@ type mapper interface {
 	ppuWrite(address uint16, value byte)
 }
 
-const (
-	cpuMinAddr = 0x4020
-)
-
 func mapCartridge(rom []byte) (mapper, error) {
 	if rom[0] != 0x4E || rom[1] != 0x45 || rom[2] != 0x53 || rom[3] != 0x1A {
 		return nil, fmt.Errorf("malformed .NES header")

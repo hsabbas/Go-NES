@@ -53,13 +53,10 @@ func loadROM() ([]byte, error) {
 	for _, entry := range entries {
 		if entry.Type().IsRegular() {
 			if filepath.Ext(entry.Name()) == ".nes" {
-				rom, err := os.ReadFile(entry.Name())
-				if err != nil {
-					return nil, err
-				}
-				return rom, nil
+				return os.ReadFile(entry.Name())
 			}
 		}
 	}
+
 	return nil, fmt.Errorf("cannot find rom")
 }

@@ -1,22 +1,16 @@
 package nes
 
 type cpuBus struct {
-	internalRam [2048]byte
+	internalRam [0x800]byte
 	m           mapper
 	ppu         *ppu
 	controller1 *controller
 	controller2 *controller
-	dmaCallback func()
-}
-
-func (cb *cpuBus) setDMACallback(callback func()) {
-	cb.dmaCallback = callback
 }
 
 func (cb *cpuBus) read(address uint16) byte {
 	if address < 0x2000 {
-		address %= 0x800
-		return cb.internalRam[address]
+		return cb.internalRam[address%0x800]
 	}
 
 	// PPU registers
@@ -48,7 +42,7 @@ func (cb *cpuBus) read(address uint16) byte {
 	}
 
 	//External memory
-	if address >= cpuMinAddr {
+	if address >= 0x4020 {
 		return cb.m.cpuRead(address)
 	}
 
@@ -57,8 +51,7 @@ func (cb *cpuBus) read(address uint16) byte {
 
 func (cb *cpuBus) write(address uint16, value byte) {
 	if address < 0x2000 {
-		address %= 0x800
-		cb.internalRam[address] = value
+		cb.internalRam[address%0x800] = value
 		return
 	}
 
@@ -96,7 +89,6 @@ func (cb *cpuBus) write(address uint16, value byte) {
 			cb.ppu.writeToOAMDATA(cb.internalRam[next])
 			next++
 		}
-		cb.dmaCallback()
 	}
 
 	//Controller registers
@@ -111,7 +103,7 @@ func (cb *cpuBus) write(address uint16, value byte) {
 	}
 
 	//External memory
-	if address >= cpuMinAddr {
+	if address >= 0x4020 {
 		cb.m.cpuWrite(address, value)
 	}
 }

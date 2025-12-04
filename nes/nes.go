@@ -15,14 +15,16 @@ func BootNES(rom []byte) *NES {
 		log.Fatal("Failed to read ROM\n", err)
 	}
 
+	controller1 := &controller{}
+	controller2 := &controller{}
+
 	ppuBus := &ppuBus{
 		m: mapper,
 	}
 	ppu := &ppu{
 		bus: ppuBus,
 	}
-	controller1 := &controller{}
-	controller2 := &controller{}
+
 	cpuBus := &cpuBus{
 		m:           mapper,
 		ppu:         ppu,
@@ -30,7 +32,7 @@ func BootNES(rom []byte) *NES {
 		controller2: controller2,
 	}
 	cpu := createCPU(cpuBus)
-	cpuBus.setDMACallback(cpu.dmaPause)
+
 	ppu.setNMICallback(cpu.sendNMI)
 
 	return &NES{

@@ -1,6 +1,6 @@
 package nes
 
-import "fmt"
+import "log"
 
 type ppuBus struct {
 	palette [0x20]byte
@@ -9,7 +9,7 @@ type ppuBus struct {
 
 func (pb *ppuBus) read(address uint16) byte {
 	if address > 0x3FFF {
-		fmt.Println("Invalid PPU read")
+		log.Println("Invalid PPU read")
 		return 0
 	}
 	if address < 0x3F00 {
@@ -25,7 +25,7 @@ func (pb *ppuBus) read(address uint16) byte {
 
 func (pb *ppuBus) write(address uint16, value byte) {
 	if address > 0x3FFF {
-		fmt.Println("Invalid PPU write")
+		log.Println("Invalid PPU write")
 		return
 	}
 	if address < 0x3F00 {
