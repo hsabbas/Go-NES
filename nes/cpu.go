@@ -482,21 +482,27 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 	case 0b101:
 		if aaa == 0b100 || aaa == 0b101 {
 			address = uint16(cpu.read(cpu.pc) + cpu.y)
+			cpu.cyclesToSkip += 4
 		} else {
 			address = uint16(cpu.read(cpu.pc) + cpu.x)
+			cpu.cyclesToSkip += 6
 		}
 		cpu.pc++
-		cpu.cyclesToSkip += 6
 	// Absolute indexed X/Y
 	case 0b111:
 		address = cpu.readAddress(cpu.pc)
 		cpu.pc += 2
 		if aaa == 0b101 {
+			if address&0xFF00 != (address+uint16(cpu.y))&0xFF00 || aaa == 0b100 {
+				cpu.cyclesToSkip += 1
+			}
+
 			address += uint16(cpu.y)
+			cpu.cyclesToSkip += 4
 		} else {
 			address += uint16(cpu.x)
+			cpu.cyclesToSkip += 7
 		}
-		cpu.cyclesToSkip += 7
 	default:
 		return false
 	}

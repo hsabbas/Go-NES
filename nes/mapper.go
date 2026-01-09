@@ -64,6 +64,9 @@ func mapCartridge(rom []byte) (mapper, error) {
 	if mapperNum == 2 {
 		return createUxromMapper(rom, prgRom, prgBanks), nil
 	}
+	if mapperNum == 7 {
+		return createAxromMapper(prgRom, prgBanks), nil
+	}
 
 	return nil, fmt.Errorf("unknown mapper number: %d", mapperNum)
 }
