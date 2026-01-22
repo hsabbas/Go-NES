@@ -79,11 +79,11 @@ func getVramIndex(address uint16, mirroring byte) uint16 {
 		return address - 0x2000
 	}
 
-	if address >= 0x2400 && address < 0x2800 {
+	if address >= 0x2400 {
 		address -= 0x400
 	}
 
-	if address >= 0x2C00 {
+	if address >= 0x2800 {
 		address -= 0x400
 	}
 
