@@ -11,6 +11,13 @@ const (
 	bit7
 )
 
+const (
+	kb4  = 0x1000
+	kb8  = 0x2000
+	kb16 = 0x4000
+	kb32 = 0x8000
+)
+
 func hasBit0(b byte) bool {
 	return b&bit0 == bit0
 }

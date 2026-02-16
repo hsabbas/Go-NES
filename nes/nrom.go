@@ -5,19 +5,14 @@ import (
 )
 
 type nrom struct {
-	is16Kb    bool
-	prgRom    []byte
-	chr       []byte
-	vram      [0x800]byte
-	mirroring byte
+	c      *cartridge
+	is16Kb bool
 }
 
-func createNromMapper(rom []byte, prgRom []byte, chrRom []byte, prg16kbBanks int) *nrom {
+func createNromMapper(c *cartridge) *nrom {
 	return &nrom{
-		is16Kb:    prg16kbBanks == 1,
-		prgRom:    prgRom,
-		chr:       chrRom,
-		mirroring: rom[6] & bit0,
+		is16Kb: c.prgBanks == 1,
+		c:      c,
 	}
 }
 
@@ -32,7 +27,7 @@ func (n *nrom) cpuRead(address uint16) byte {
 		address %= 0x4000
 	}
 
-	return n.prgRom[address]
+	return n.c.prgRom[address]
 }
 
 func (n *nrom) cpuWrite(address uint16, value byte) {
@@ -40,27 +35,28 @@ func (n *nrom) cpuWrite(address uint16, value byte) {
 }
 
 func (n *nrom) ppuRead(address uint16) byte {
-	if address >= 0x3000 {
+	if address >= 0x3F00 {
 		log.Println("Invalid ppu read to address", address)
 		return 0
 	}
 
 	if address < kb8 {
-		return n.chr[address]
+		return n.c.chr[address]
 	}
 
-	address = getVramIndex(address, n.mirroring)
-
-	return n.vram[address]
+	return n.c.readVram(address)
 }
 
 func (n *nrom) ppuWrite(address uint16, value byte) {
-	if address >= 0x3000 || address < 0x2000 {
+	if address >= 0x3F00 {
 		log.Println("Invalid ppu write to address", address)
 		return
 	}
 
-	address = getVramIndex(address, n.mirroring)
+	if address < 0x2000 {
+		n.c.chr[address] = value
+		return
+	}
 
-	n.vram[address] = value
+	n.c.writeVram(address, value)
 }

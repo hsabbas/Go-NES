@@ -10,7 +10,7 @@ type NES struct {
 }
 
 func BootNES(rom []byte) *NES {
-	mapper, err := mapCartridge(rom)
+	mapper, err := createMapper(rom)
 	if err != nil {
 		log.Fatal("Failed to read ROM\n", err)
 	}
