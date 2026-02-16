@@ -52,8 +52,8 @@ func (nes *NES) RunFrame() {
 	}
 }
 
-func (nes *NES) ReceiveInput(buttonBit byte, pressed bool) {
-	nes.controller1.updateButton(buttonBit, pressed)
+func (nes *NES) ReceivePlayer1Input(button Button, pressed bool) {
+	nes.controller1.updateButton(button, pressed)
 }
 
 func (nes *NES) SetFrameCallback(frameCallback func([240][256]uint16)) {

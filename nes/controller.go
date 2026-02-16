@@ -1,7 +1,9 @@
 package nes
 
+type Button byte
+
 const (
-	A uint8 = 1 << iota
+	A Button = 1 << iota
 	B
 	Select
 	Start
@@ -31,7 +33,7 @@ func (c *controller) stopPoll() {
 func (c *controller) read() byte {
 	var val byte
 	if c.polling {
-		val = c.register & A
+		val = c.register & byte(A)
 	} else {
 		if c.bitsRead >= 8 {
 			val = 1
@@ -44,11 +46,11 @@ func (c *controller) read() byte {
 	return val
 }
 
-func (c *controller) updateButton(buttonBit byte, pressed bool) {
+func (c *controller) updateButton(buttonBit Button, pressed bool) {
 	if pressed {
-		c.buttonStates |= buttonBit
+		c.buttonStates |= byte(buttonBit)
 	} else {
-		c.buttonStates &= ^buttonBit
+		c.buttonStates &= ^byte(buttonBit)
 	}
 	if c.polling {
 		c.register = c.buttonStates

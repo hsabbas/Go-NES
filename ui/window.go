@@ -51,36 +51,36 @@ func CreateWindow(console *nes.NES) (window, error) {
 		pressed := action == glfw.Press
 
 		if key == glfw.KeyW || key == glfw.KeyUp {
-			console.ReceiveInput(nes.Up, pressed)
+			console.ReceivePlayer1Input(nes.Up, pressed)
 
 		}
 
 		if key == glfw.KeyS || key == glfw.KeyDown {
-			console.ReceiveInput(nes.Down, pressed)
+			console.ReceivePlayer1Input(nes.Down, pressed)
 		}
 
 		if key == glfw.KeyA || key == glfw.KeyLeft {
-			console.ReceiveInput(nes.Left, pressed)
+			console.ReceivePlayer1Input(nes.Left, pressed)
 		}
 
 		if key == glfw.KeyD || key == glfw.KeyRight {
-			console.ReceiveInput(nes.Right, pressed)
+			console.ReceivePlayer1Input(nes.Right, pressed)
 		}
 
 		if key == glfw.KeyPeriod || key == glfw.KeyX {
-			console.ReceiveInput(nes.A, pressed)
+			console.ReceivePlayer1Input(nes.A, pressed)
 		}
 
 		if key == glfw.KeyComma || key == glfw.KeyZ {
-			console.ReceiveInput(nes.B, pressed)
+			console.ReceivePlayer1Input(nes.B, pressed)
 		}
 
 		if key == glfw.KeyLeftShift || key == glfw.KeyRightShift {
-			console.ReceiveInput(nes.Select, pressed)
+			console.ReceivePlayer1Input(nes.Select, pressed)
 		}
 
 		if key == glfw.KeyEnter {
-			console.ReceiveInput(nes.Start, pressed)
+			console.ReceivePlayer1Input(nes.Start, pressed)
 		}
 	})
 
