@@ -48,6 +48,7 @@ func readCartridge(rom []byte) (*cartridge, error) {
 	if isNES20 {
 		log.Println(".NES 2.0 headers are not supported. Game may not run as expected.")
 	}
+	log.Println("Mapper Number:", mapperNum)
 	log.Println("Total size:", len(rom), "bytes")
 	log.Println("16 KB PRG Rom banks:", prgBanks)
 	log.Println("8 KB CHR Rom banks:", chrBanks)

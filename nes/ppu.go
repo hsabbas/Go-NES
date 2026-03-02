@@ -167,8 +167,14 @@ func (ppu *ppu) writeToPPUDATA(data byte) {
 }
 
 func (ppu *ppu) readPPUDATA() byte {
-	val := ppu.dataBuffer
-	ppu.dataBuffer = ppu.bus.read(ppu.v)
+	var val byte
+	if ppu.v >= 0x3F00 {
+		ppu.dataBuffer = ppu.bus.read(ppu.v - 0x1000)
+		val = ppu.bus.read(ppu.v)
+	} else {
+		val = ppu.dataBuffer
+		ppu.dataBuffer = ppu.bus.read(ppu.v)
+	}
 	if ppu.vramAdrInc {
 		ppu.v += 32
 	} else {
@@ -191,7 +197,7 @@ func (ppu *ppu) renderFrame() {
 func (ppu *ppu) step() {
 	if ppu.cycle == 0 {
 		ppu.cycle++
-		if !(ppu.scanline == 0 && ppu.evenFrame) {
+		if !(ppu.scanline == 0 && ppu.evenFrame && ppu.renderingEnabled()) {
 			return
 		}
 	}
@@ -199,7 +205,7 @@ func (ppu *ppu) step() {
 	visibleFrame := ppu.scanline <= 239
 	prerenderLine := ppu.scanline == 261
 	renderLine := visibleFrame || prerenderLine
-	earlyFetchCycle := ppu.cycle >= 321
+	earlyFetchCycle := ppu.cycle >= 321 && ppu.cycle <= 336
 	visibleCycle := ppu.cycle <= 256
 	fetchCycle := earlyFetchCycle || visibleCycle
 
@@ -214,7 +220,7 @@ func (ppu *ppu) step() {
 			ppu.renderBackground()
 		}
 
-		if ppu.cycle%8 == 0 && fetchCycle {
+		if renderLine && ppu.cycle%8 == 0 && fetchCycle {
 			ppu.incrementCoarseX()
 		}
 
@@ -244,11 +250,9 @@ func (ppu *ppu) step() {
 			}
 		}
 
-	}
-
-	// Create pixel
-	if visibleFrame && visibleCycle {
-		ppu.createPixel()
+		if visibleFrame && visibleCycle {
+			ppu.createPixel()
+		}
 	}
 
 	if ppu.scanline == 241 && ppu.cycle == 1 {

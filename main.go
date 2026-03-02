@@ -11,14 +11,22 @@ import (
 )
 
 func main() {
-	rom, err := loadROM()
-	if err != nil {
-		panic(err)
+	var console nes.NES
+	if len(os.Args) > 1 {
+		rom, err := os.ReadFile(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
+		console = *nes.BootNES(rom)
+	} else {
+		rom, err := loadROM()
+		if err != nil {
+			panic(err)
+		}
+		console = *nes.BootNES(rom)
 	}
 
-	nes := nes.BootNES(rom)
-
-	window, err := ui.CreateWindow(nes)
+	window, err := ui.CreateWindow(&console)
 	if err != nil {
 		panic(err)
 	}
@@ -30,7 +38,7 @@ func main() {
 	}
 	defer display.Close()
 
-	nes.SetFrameCallback(func(pixels [240][256]uint16) {
+	console.SetFrameCallback(func(pixels [240][256]uint16) {
 		display.ReceiveNESFrame(pixels, 256, 240)
 	})
 
@@ -40,7 +48,7 @@ func main() {
 		<-t.C
 		display.RenderFrame()
 		window.Update()
-		nes.RunFrame()
+		console.RunFrame()
 	}
 }
 
