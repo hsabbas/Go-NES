@@ -48,13 +48,8 @@ func (n *nrom) ppuRead(address uint16) byte {
 }
 
 func (n *nrom) ppuWrite(address uint16, value byte) {
-	if address >= 0x3F00 {
+	if address >= 0x3F00 || address < 0x2000 {
 		log.Println("Invalid ppu write to address", address)
-		return
-	}
-
-	if address < 0x2000 {
-		n.c.chr[address] = value
 		return
 	}
 

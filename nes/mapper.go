@@ -2,7 +2,6 @@ package nes
 
 import (
 	"fmt"
-	"log"
 )
 
 type mapper interface {
@@ -15,7 +14,7 @@ type mapper interface {
 func createMapper(rom []byte) (mapper, error) {
 	cart, err := readCartridge(rom)
 	if err != nil {
-		log.Fatal("Failed to read cartridge:", err)
+		return nil, err
 	}
 
 	switch cart.mapperNumber {

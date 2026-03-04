@@ -38,7 +38,7 @@ func main() {
 	}
 	defer display.Close()
 
-	console.SetFrameCallback(func(pixels [240][256]uint16) {
+	console.SetFrameCallback(func(pixels [240 * 256 * 3]byte) {
 		display.ReceiveNESFrame(pixels, 256, 240)
 	})
 

@@ -66,11 +66,11 @@ type ppu struct {
 
 	pixels [240][256]uint16
 
-	sendFrame func([240][256]uint16)
+	sendFrame func([240 * 256 * 3]byte)
 	signalNMI func()
 }
 
-func (ppu *ppu) setFrameCallback(callback func([240][256]uint16)) {
+func (ppu *ppu) setFrameCallback(callback func([240 * 256 * 3]byte)) {
 	ppu.sendFrame = callback
 }
 
@@ -191,7 +191,18 @@ func (ppu *ppu) renderFrame() {
 	ppu.scanline = 0
 	ppu.cycle = 0
 	ppu.evenFrame = !ppu.evenFrame
-	ppu.sendFrame(ppu.pixels)
+
+	var data [256 * 240 * 3]byte
+	ind := 0
+	for i := 239; i >= 0; i-- {
+		for _, val := range ppu.pixels[i] {
+			data[ind] = colorMap[val].r
+			data[ind+1] = colorMap[val].g
+			data[ind+2] = colorMap[val].b
+			ind += 3
+		}
+	}
+	ppu.sendFrame(data)
 }
 
 func (ppu *ppu) step() {

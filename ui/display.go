@@ -44,19 +44,8 @@ func (d *Display) Close() {
 	d.f.delete()
 }
 
-func (d *Display) ReceiveNESFrame(pixels [240][256]uint16, width int32, height int32) {
-	data := make([]byte, 256*240*3)
-
-	ind := 0
-	for i := 239; i >= 0; i-- {
-		for _, val := range pixels[i] {
-			data[ind] = colorMap[val].r
-			data[ind+1] = colorMap[val].g
-			data[ind+2] = colorMap[val].b
-			ind += 3
-		}
-	}
-	d.f.t.updateTexture(data, width, height)
+func (d *Display) ReceiveNESFrame(pixels [240 * 256 * 3]byte, width int32, height int32) {
+	d.f.t.updateTexture(pixels[:], width, height)
 }
 
 func debugCallback(source uint32,
