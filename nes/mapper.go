@@ -24,6 +24,8 @@ func createMapper(rom []byte) (mapper, error) {
 		return createMMC1Mapper(cart), nil
 	case 2:
 		return createUxromMapper(cart), nil
+	case 3:
+		return createCnromMapper(cart), nil
 	case 7:
 		return createAxromMapper(cart), nil
 	}
