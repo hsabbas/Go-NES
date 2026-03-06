@@ -1,7 +1,9 @@
 # Go NES Emulator
 ## Version Make-it-Work-More (Alpha)
 
-![Playing Mario](https://github.com/user-attachments/assets/70cfe606-6151-422f-ac77-c2cfcbcea3a1)
+<img width="256" height="240" alt="Screenshot 2026-03-06 150332" src="https://github.com/user-attachments/assets/69bae8ca-39a2-4fd3-b406-727e7771eaf3" /><img width="256" height="240" alt="Screenshot 2026-03-06 150513" src="https://github.com/user-attachments/assets/fe82da95-cc23-4cd7-a4da-55257f600690" />
+
+
 
 ### And it does work! Now with more games supported!
 Features implemented:
