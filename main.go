@@ -4,51 +4,36 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/hsabbas/Go-NES-Emulator/nes"
 	"github.com/hsabbas/Go-NES-Emulator/ui"
 )
 
 func main() {
-	var console nes.NES
+	var console *nes.NES
 	if len(os.Args) > 1 {
 		rom, err := os.ReadFile(os.Args[1])
 		if err != nil {
 			panic(err)
 		}
-		console = *nes.BootNES(rom)
+		console = nes.BootNES(rom)
 	} else {
 		rom, err := loadROM()
 		if err != nil {
 			panic(err)
 		}
-		console = *nes.BootNES(rom)
+		console = nes.BootNES(rom)
 	}
 
-	window, err := ui.CreateWindow(&console)
-	if err != nil {
-		panic(err)
-	}
-	defer window.Close()
-
-	display, err := ui.CreateDisplay()
-	if err != nil {
-		panic(err)
-	}
+	display := ui.Init(console)
 	defer display.Close()
 
-	console.SetFrameCallback(func(pixels [240 * 256 * 3]byte) {
-		display.ReceiveNESFrame(pixels, 256, 240)
-	})
+	for !display.ShouldClose() {
+		display.ProcessInput()
 
-	frameDuration := time.Millisecond * 16
-	t := time.NewTicker(frameDuration)
-	for !window.ShouldClose() {
-		<-t.C
-		display.RenderFrame()
-		window.Update()
 		console.RunFrame()
+
+		display.Render()
 	}
 }
 

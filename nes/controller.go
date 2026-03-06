@@ -56,3 +56,10 @@ func (c *controller) updateButton(buttonBit Button, pressed bool) {
 		c.register = c.buttonStates
 	}
 }
+
+func (c *controller) updateRegister(register byte) {
+	c.buttonStates = register
+	if c.polling {
+		c.register = register
+	}
+}

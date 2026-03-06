@@ -64,14 +64,16 @@ type ppu struct {
 	scanline  uint16
 	evenFrame bool
 
-	pixels [240][256]uint16
+	paletteVals [240][256]uint16
+	frame       [240][256 * 3]byte
 
-	sendFrame func([240 * 256 * 3]byte)
 	signalNMI func()
 }
 
-func (ppu *ppu) setFrameCallback(callback func([240 * 256 * 3]byte)) {
-	ppu.sendFrame = callback
+func createPPU(pb *ppuBus) *ppu {
+	return &ppu{
+		bus: pb,
+	}
 }
 
 func (ppu *ppu) setNMICallback(callback func()) {
@@ -187,29 +189,25 @@ func (ppu *ppu) renderingEnabled() bool {
 	return ppu.backgroundEnabled || ppu.spriteEnabled
 }
 
-func (ppu *ppu) renderFrame() {
+func (ppu *ppu) endFrame() {
 	ppu.scanline = 0
 	ppu.cycle = 0
 	ppu.evenFrame = !ppu.evenFrame
 
-	var data [256 * 240 * 3]byte
-	ind := 0
-	for i := 239; i >= 0; i-- {
-		for _, val := range ppu.pixels[i] {
-			data[ind] = colorMap[val].r
-			data[ind+1] = colorMap[val].g
-			data[ind+2] = colorMap[val].b
-			ind += 3
+	for y := 0; y < 240; y++ {
+		for x, val := range ppu.paletteVals[y] {
+			ppu.frame[y][x*3] = colorMap[val].r
+			ppu.frame[y][x*3+1] = colorMap[val].g
+			ppu.frame[y][x*3+2] = colorMap[val].b
 		}
 	}
-	ppu.sendFrame(data)
 }
 
-func (ppu *ppu) step() {
+func (ppu *ppu) step() bool {
 	if ppu.cycle == 0 {
 		ppu.cycle++
 		if !(ppu.scanline == 0 && ppu.evenFrame && ppu.renderingEnabled()) {
-			return
+			return false
 		}
 	}
 
@@ -290,9 +288,11 @@ func (ppu *ppu) step() {
 		ppu.cycle = 0
 		ppu.scanline++
 		if ppu.scanline > 261 {
-			ppu.renderFrame()
+			ppu.endFrame()
+			return true
 		}
 	}
+	return false
 }
 
 func (ppu *ppu) renderBackground() {
@@ -485,7 +485,7 @@ func (ppu *ppu) createPixel() {
 
 	colorVal |= uint16(ppu.colorEmphasis) << 8
 
-	ppu.pixels[ppu.scanline][x] = colorVal
+	ppu.paletteVals[ppu.scanline][x] = colorVal
 }
 
 func (ppu *ppu) incrementCoarseX() {

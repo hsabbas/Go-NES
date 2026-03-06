@@ -21,9 +21,7 @@ func BootNES(rom []byte) *NES {
 	ppuBus := &ppuBus{
 		m: mapper,
 	}
-	ppu := &ppu{
-		bus: ppuBus,
-	}
+	ppu := createPPU(ppuBus)
 
 	cpuBus := &cpuBus{
 		m:           mapper,
@@ -44,18 +42,23 @@ func BootNES(rom []byte) *NES {
 }
 
 func (nes *NES) RunFrame() {
-	for i := 0; i < 29781; i++ {
-		nes.ppu.step()
-		nes.ppu.step()
-		nes.ppu.step()
+	frameDone := false
+	for !frameDone {
+		frameDone = frameDone || nes.ppu.step()
+		frameDone = frameDone || nes.ppu.step()
+		frameDone = frameDone || nes.ppu.step()
 		nes.cpu.step()
 	}
 }
 
-func (nes *NES) ReceivePlayer1Input(button Button, pressed bool) {
+func (nes *NES) UpdatePlayer1Button(button Button, pressed bool) {
 	nes.controller1.updateButton(button, pressed)
 }
 
-func (nes *NES) SetFrameCallback(frameCallback func([240 * 256 * 3]byte)) {
-	nes.ppu.setFrameCallback(frameCallback)
+func (nes *NES) UpdatePlayer1Register(register byte) {
+	nes.controller1.updateRegister(register)
+}
+
+func (nes *NES) GetImage() [240][256 * 3]byte {
+	return nes.ppu.frame
 }
