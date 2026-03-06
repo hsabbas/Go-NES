@@ -1,12 +1,11 @@
 package nes
 
-import (
-	"fmt"
-)
+import "log"
 
 const nmiVector uint16 = 0xFFFA
 const resetVector uint16 = 0xFFFC
 const irqVector uint16 = 0xFFFE
+const oamdmaAddr uint16 = 0x4014
 
 type cpu struct {
 	bus *cpuBus
@@ -30,8 +29,7 @@ type cpu struct {
 	n bool //Negative
 
 	cyclesToSkip uint
-
-	oddCycle bool
+	oddCycle     bool
 }
 
 func createCPU(mem *cpuBus) *cpu {
@@ -44,8 +42,23 @@ func createCPU(mem *cpuBus) *cpu {
 	return cpu
 }
 
+func (cpu *cpu) write(address uint16, value byte) {
+	if address == oamdmaAddr {
+		cpu.cyclesToSkip += 513
+		if cpu.oddCycle {
+			cpu.cyclesToSkip++
+		}
+	}
+
+	cpu.bus.write(address, value)
+}
+
+func (cpu *cpu) read(address uint16) byte {
+	return cpu.bus.read(address)
+}
+
 func (cpu *cpu) readAddress(address uint16) uint16 {
-	return uint16(cpu.bus.read(address)) + uint16(cpu.bus.read(address+1))<<8
+	return uint16(cpu.read(address)) + uint16(cpu.read(address+1))<<8
 }
 
 func (cpu *cpu) pushStack(value byte) {
@@ -55,14 +68,7 @@ func (cpu *cpu) pushStack(value byte) {
 
 func (cpu *cpu) popStack() byte {
 	cpu.s++
-	return cpu.bus.read(0x100 | uint16(cpu.s))
-}
-
-func (cpu *cpu) dmaPause() {
-	cpu.cyclesToSkip += 513
-	if cpu.oddCycle {
-		cpu.cyclesToSkip++
-	}
+	return cpu.read(0x100 | uint16(cpu.s))
 }
 
 func (cpu *cpu) getFlagByte() byte {
@@ -101,7 +107,7 @@ func (cpu *cpu) step() {
 		return
 	}
 
-	opcode := cpu.bus.read(cpu.pc)
+	opcode := cpu.read(cpu.pc)
 	cpu.pc++
 
 	cpu.execute(opcode)
@@ -117,7 +123,7 @@ func (cpu *cpu) execute(opcode byte) {
 		cpu.executeGroupThree(opcode)
 
 	if !executed {
-		fmt.Printf("Failed to execute opcode: %x\n", opcode)
+		log.Printf("Failed to execute opcode: %x\n", opcode)
 	}
 }
 
@@ -291,7 +297,7 @@ func (cpu *cpu) executeBranch(opcode byte) bool {
 
 	if shouldBranch {
 		page := cpu.pc >> 8
-		offset := uint16(cpu.bus.read(cpu.pc))
+		offset := uint16(cpu.read(cpu.pc))
 		cpu.pc += 1 + offset
 		if offset >= 128 {
 			cpu.pc -= 256
@@ -323,14 +329,14 @@ func (cpu *cpu) executeGroupOne(opcode byte) bool {
 	switch bbb {
 	// Indexed Indirect X
 	case 0b000:
-		arg := cpu.bus.read(cpu.pc)
+		arg := cpu.read(cpu.pc)
 		cpu.pc++
 		ind := arg + cpu.x
-		address = uint16(cpu.bus.read(uint16(ind))) + uint16(cpu.bus.read(uint16(ind+1)))<<8
+		address = uint16(cpu.read(uint16(ind))) + uint16(cpu.read(uint16(ind+1)))<<8
 		cpu.cyclesToSkip += 6
 	// Zero page
 	case 0b001:
-		address = uint16(cpu.bus.read(cpu.pc))
+		address = uint16(cpu.read(cpu.pc))
 		cpu.pc++
 		cpu.cyclesToSkip += 3
 	// #immediate
@@ -345,16 +351,16 @@ func (cpu *cpu) executeGroupOne(opcode byte) bool {
 		cpu.cyclesToSkip += 4
 	// Indexed Indirect Y
 	case 0b100:
-		arg := uint16(cpu.bus.read(cpu.pc))
+		arg := uint16(cpu.read(cpu.pc))
 		cpu.pc++
-		address = uint16(cpu.bus.read(arg)) + uint16(cpu.bus.read((arg+1)%256))<<8 + uint16(cpu.y)
+		address = uint16(cpu.read(arg)) + uint16(cpu.read((arg+1)%256))<<8 + uint16(cpu.y)
 		cpu.cyclesToSkip += 5
 		if (address-uint16(cpu.y))&0xFF00 != address&0xFF00 || aaa == 0b100 {
 			cpu.cyclesToSkip += 1
 		}
 	// Zero page indexed X
 	case 0b101:
-		address = uint16(cpu.bus.read(cpu.pc) + cpu.x)
+		address = uint16(cpu.read(cpu.pc) + cpu.x)
 		cpu.pc++
 		cpu.cyclesToSkip += 4
 	// Absolute indexed Y
@@ -381,19 +387,19 @@ func (cpu *cpu) executeGroupOne(opcode byte) bool {
 	switch aaa {
 	// ORA
 	case 0b000:
-		cpu.a |= cpu.bus.read(address)
+		cpu.a |= cpu.read(address)
 		cpu.setZN(cpu.a)
 	// AND
 	case 0b001:
-		cpu.a &= cpu.bus.read(address)
+		cpu.a &= cpu.read(address)
 		cpu.setZN(cpu.a)
 	// EOR
 	case 0b010:
-		cpu.a ^= cpu.bus.read(address)
+		cpu.a ^= cpu.read(address)
 		cpu.setZN(cpu.a)
 	// ADC
 	case 0b011:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		sum := uint16(cpu.a) + uint16(operand)
 		if cpu.c {
 			sum++
@@ -404,19 +410,19 @@ func (cpu *cpu) executeGroupOne(opcode byte) bool {
 		cpu.setZN(cpu.a)
 	// STA
 	case 0b100:
-		cpu.bus.write(address, cpu.a)
+		cpu.write(address, cpu.a)
 	// LDA
 	case 0b101:
-		cpu.a = cpu.bus.read(address)
+		cpu.a = cpu.read(address)
 		cpu.setZN(cpu.a)
 	// CMP
 	case 0b110:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		cpu.c = cpu.a >= operand
 		cpu.setZN(cpu.a - operand)
 	// SBC
 	case 0b111:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		diff := cpu.a - operand
 		if !cpu.c {
 			diff--
@@ -453,7 +459,7 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 		cpu.cyclesToSkip += 2
 	// Zero page
 	case 0b001:
-		address = uint16(cpu.bus.read(cpu.pc))
+		address = uint16(cpu.read(cpu.pc))
 		cpu.pc++
 		if aaa == 0b100 || aaa == 0b101 {
 			cpu.cyclesToSkip += 3
@@ -475,22 +481,28 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 	// Zero page indexed X/Y
 	case 0b101:
 		if aaa == 0b100 || aaa == 0b101 {
-			address = uint16(cpu.bus.read(cpu.pc) + cpu.y)
+			address = uint16(cpu.read(cpu.pc) + cpu.y)
+			cpu.cyclesToSkip += 4
 		} else {
-			address = uint16(cpu.bus.read(cpu.pc) + cpu.x)
+			address = uint16(cpu.read(cpu.pc) + cpu.x)
+			cpu.cyclesToSkip += 6
 		}
 		cpu.pc++
-		cpu.cyclesToSkip += 6
 	// Absolute indexed X/Y
 	case 0b111:
 		address = cpu.readAddress(cpu.pc)
 		cpu.pc += 2
 		if aaa == 0b101 {
+			if address&0xFF00 != (address+uint16(cpu.y))&0xFF00 || aaa == 0b100 {
+				cpu.cyclesToSkip += 1
+			}
+
 			address += uint16(cpu.y)
+			cpu.cyclesToSkip += 4
 		} else {
 			address += uint16(cpu.x)
+			cpu.cyclesToSkip += 7
 		}
-		cpu.cyclesToSkip += 7
 	default:
 		return false
 	}
@@ -504,8 +516,8 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 			value = cpu.a
 			cpu.a = value << 1
 		} else {
-			value = cpu.bus.read(address)
-			cpu.bus.write(address, value<<1)
+			value = cpu.read(address)
+			cpu.write(address, value<<1)
 		}
 
 		cpu.c = hasBit7(value)
@@ -521,11 +533,11 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 			}
 			cpu.a = byte(value)
 		} else {
-			value = uint16(cpu.bus.read(address)) << 1
+			value = uint16(cpu.read(address)) << 1
 			if cpu.c {
 				value += 1
 			}
-			cpu.bus.write(address, byte(value))
+			cpu.write(address, byte(value))
 		}
 
 		cpu.c = value&0x100 == 0x100
@@ -538,8 +550,8 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 			value = cpu.a
 			cpu.a = value >> 1
 		} else {
-			value = cpu.bus.read(address)
-			cpu.bus.write(address, value>>1)
+			value = cpu.read(address)
+			cpu.write(address, value>>1)
 		}
 
 		cpu.c = value&1 == 1
@@ -556,32 +568,32 @@ func (cpu *cpu) executeGroupTwo(opcode byte) bool {
 			cpu.c = value&1 == 1
 			cpu.a = byte(value >> 1)
 		} else {
-			value = uint16(cpu.bus.read(address))
+			value = uint16(cpu.read(address))
 			if cpu.c {
 				value += 0x100
 			}
 			cpu.c = value&1 == 1
-			cpu.bus.write(address, byte(value>>1))
+			cpu.write(address, byte(value>>1))
 		}
 
 		cpu.setZN(byte(value >> 1))
 	// STX
 	case 0b100:
-		cpu.bus.write(address, cpu.x)
+		cpu.write(address, cpu.x)
 	// LDX
 	case 0b101:
-		cpu.x = cpu.bus.read(address)
+		cpu.x = cpu.read(address)
 		cpu.setZN(cpu.x)
 	// DEC
 	case 0b110:
-		value := cpu.bus.read(address) - 1
+		value := cpu.read(address) - 1
 		cpu.setZN(value)
-		cpu.bus.write(address, value)
+		cpu.write(address, value)
 	// INC
 	case 0b111:
-		value := cpu.bus.read(address) + 1
+		value := cpu.read(address) + 1
 		cpu.setZN(value)
-		cpu.bus.write(address, value)
+		cpu.write(address, value)
 	default:
 		return false
 	}
@@ -608,7 +620,7 @@ func (cpu *cpu) executeGroupThree(opcode byte) bool {
 		cpu.cyclesToSkip += 2
 	// Zero page
 	case 0b001:
-		address = uint16(cpu.bus.read(cpu.pc))
+		address = uint16(cpu.read(cpu.pc))
 		cpu.pc++
 		cpu.cyclesToSkip += 3
 	// Absolute
@@ -622,7 +634,7 @@ func (cpu *cpu) executeGroupThree(opcode byte) bool {
 		cpu.cyclesToSkip += 4
 	// Zero page indexed X
 	case 0b101:
-		address = uint16(cpu.bus.read(cpu.pc) + cpu.x)
+		address = uint16(cpu.read(cpu.pc) + cpu.x)
 		cpu.pc++
 		cpu.cyclesToSkip += 4
 	// Absolute indexed X
@@ -639,7 +651,7 @@ func (cpu *cpu) executeGroupThree(opcode byte) bool {
 	switch aaa {
 	// BIT
 	case 0b001:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		cpu.z = operand&cpu.a == 0
 		cpu.v = hasBit6(operand)
 		cpu.n = hasBit7(operand)
@@ -652,23 +664,23 @@ func (cpu *cpu) executeGroupThree(opcode byte) bool {
 		address = cpu.readAddress(cpu.pc)
 		page := address & 0xFF00
 		highByteAddr := page + (address+1)&0xff
-		cpu.pc = uint16(cpu.bus.read(address)) + uint16(cpu.bus.read(highByteAddr))<<8
+		cpu.pc = uint16(cpu.read(address)) + uint16(cpu.read(highByteAddr))<<8
 		cpu.cyclesToSkip += 5
 	// STY
 	case 0b100:
-		cpu.bus.write(address, cpu.y)
+		cpu.write(address, cpu.y)
 	// LDY
 	case 0b101:
-		cpu.y = cpu.bus.read(address)
+		cpu.y = cpu.read(address)
 		cpu.setZN(cpu.y)
 	// CPY
 	case 0b110:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		cpu.c = cpu.y >= operand
 		cpu.setZN(cpu.y - operand)
 	// CPX
 	case 0b111:
-		operand := cpu.bus.read(address)
+		operand := cpu.read(address)
 		cpu.c = cpu.x >= operand
 		cpu.setZN(cpu.x - operand)
 	default:

@@ -1,30 +1,38 @@
-# NES Emulator
-## Version Make-it-Work (Pre-Alpha)
+# Go NES Emulator
+## Version Make-it-Work-More (Alpha)
 
-![Playing Mario](https://github.com/user-attachments/assets/70cfe606-6151-422f-ac77-c2cfcbcea3a1)
+<img width="256" height="240" alt="Screenshot 2026-03-06 150332" src="https://github.com/user-attachments/assets/69bae8ca-39a2-4fd3-b406-727e7771eaf3" /><img width="256" height="240" alt="Screenshot 2026-03-06 150513" src="https://github.com/user-attachments/assets/fe82da95-cc23-4cd7-a4da-55257f600690" />
 
-### And it does work! At least a little bit.
+
+
+### And it does work! Now with more games supported!
 Features implemented:
 - CPU with all official opcodes
-- PPU with Graphics using OpenGL
+- PPU with Graphics using raylib
 - Controls with two different keyboard layouts for input
-- NROM mapper
+
+### Cartridges Supported
+- Mapper 0 NROM
+- Mapper 1 MMC1
+- Mapper 2 UxROM
+- Mapper 3 CNROM
+- Mapper 7 AxROM
 
 Currently doesn't support two players or audio.
 
 #### To run the emulator:   
 Clone the repository  
-Enable CGo to run OpenGL:  
+Enable CGo to build with raylib:  
 ```
 go env -w "CGO_ENABLED=1"
 ```
   
-Now it should run:  
+Run with path to the game ROM:  
 ```
-go run main.go  
+go run main.go ./path/to/rom.nes  
 ```
 
-Currently runs with the first .nes file it finds in the current directory.
+If no path is provied, it runs with the first .nes file it finds in the current directory.
 
 ### Controls
 Includes layout for arrow keys as well as WASD controls.
