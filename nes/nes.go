@@ -55,8 +55,16 @@ func (nes *NES) UpdatePlayer1Button(button Button, pressed bool) {
 	nes.controller1.updateButton(button, pressed)
 }
 
+func (nes *NES) UpdatePlayer2Button(button Button, pressed bool) {
+	nes.controller2.updateButton(button, pressed)
+}
+
 func (nes *NES) UpdatePlayer1Register(register byte) {
 	nes.controller1.updateRegister(register)
+}
+
+func (nes *NES) UpdatePlayer2Register(register byte) {
+	nes.controller2.updateRegister(register)
 }
 
 func (nes *NES) GetImage() [240][256 * 3]byte {

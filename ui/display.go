@@ -36,33 +36,66 @@ func Init(console *nes.NES) *Display {
 }
 
 func (d *Display) ProcessInput() {
+	d.console.UpdatePlayer1Register(d.pollPlayer1Input())
+	d.console.UpdatePlayer2Register(d.pollPlayer2Input())
+}
+
+func (d *Display) pollPlayer1Input() byte {
 	var buttons byte
-	if rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyUp) {
+	if rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyUp) || rl.IsGamepadButtonDown(0, rl.GamepadButtonLeftFaceUp) {
 		buttons |= byte(nes.Up)
 	}
-	if rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyDown) {
+	if rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyDown) || rl.IsGamepadButtonDown(0, rl.GamepadButtonLeftFaceDown) {
 		buttons |= byte(nes.Down)
 	}
-	if rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyLeft) {
+	if rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyLeft) || rl.IsGamepadButtonDown(0, rl.GamepadButtonLeftFaceLeft) {
 		buttons |= byte(nes.Left)
 	}
-	if rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyRight) {
+	if rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyRight) || rl.IsGamepadButtonDown(0, rl.GamepadButtonLeftFaceRight) {
 		buttons |= byte(nes.Right)
 	}
-	if rl.IsKeyDown(rl.KeyPeriod) || rl.IsKeyDown(rl.KeyX) {
+	if rl.IsKeyDown(rl.KeyPeriod) || rl.IsKeyDown(rl.KeyX) || rl.IsGamepadButtonDown(0, rl.GamepadButtonRightFaceDown) {
 		buttons |= byte(nes.A)
 	}
-	if rl.IsKeyDown(rl.KeyComma) || rl.IsKeyDown(rl.KeyZ) {
+	if rl.IsKeyDown(rl.KeyComma) || rl.IsKeyDown(rl.KeyZ) || rl.IsGamepadButtonDown(0, rl.GamepadButtonRightFaceLeft) {
 		buttons |= byte(nes.B)
 	}
-	if rl.IsKeyDown(rl.KeyLeftShift) || rl.IsKeyDown(rl.KeyRightShift) {
+	if rl.IsKeyDown(rl.KeyLeftShift) || rl.IsKeyDown(rl.KeyRightShift) || rl.IsGamepadButtonDown(0, rl.GamepadButtonMiddleLeft) {
 		buttons |= byte(nes.Select)
 	}
-	if rl.IsKeyDown(rl.KeyEnter) {
+	if rl.IsKeyDown(rl.KeyEnter) || rl.IsGamepadButtonDown(0, rl.GamepadButtonMiddleRight) {
 		buttons |= byte(nes.Start)
 	}
+	return buttons
+}
 
-	d.console.UpdatePlayer1Register(buttons)
+func (d *Display) pollPlayer2Input() byte {
+	var buttons byte
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonLeftFaceUp) {
+		buttons |= byte(nes.Up)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonLeftFaceDown) {
+		buttons |= byte(nes.Down)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonLeftFaceLeft) {
+		buttons |= byte(nes.Left)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonLeftFaceRight) {
+		buttons |= byte(nes.Right)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonRightFaceDown) {
+		buttons |= byte(nes.A)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonRightFaceLeft) {
+		buttons |= byte(nes.B)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonMiddleLeft) {
+		buttons |= byte(nes.Select)
+	}
+	if rl.IsGamepadButtonDown(1, rl.GamepadButtonMiddleRight) {
+		buttons |= byte(nes.Start)
+	}
+	return buttons
 }
 
 func (d *Display) Render() {
