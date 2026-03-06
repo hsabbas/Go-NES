@@ -114,4 +114,5 @@ func (d *Display) ShouldClose() bool {
 
 func (d *Display) Close() {
 	rl.UnloadTexture(*d.texture)
+	rl.CloseWindow()
 }
