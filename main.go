@@ -28,6 +28,7 @@ func main() {
 	display := ui.Init(console)
 	defer display.Close()
 
+	display.SetTargetFPS(60)
 	for !display.ShouldClose() {
 		display.ProcessInput()
 

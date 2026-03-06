@@ -19,10 +19,8 @@ func Init(console *nes.NES) *Display {
 	rl.InitWindow(256*3, 240*3, "NES Emulator by Hassan :)")
 	img := rl.NewImage(make([]byte, 240*256*4), 256, 240, 1, rl.UncompressedR8g8b8a8)
 	texture := rl.LoadTextureFromImage(img)
-	rl.SetTargetFPS(60)
 
 	srcRect := rl.NewRectangle(0, 0, 256, 240)
-
 	destRect := &rl.Rectangle{}
 
 	d := &Display{
@@ -33,6 +31,10 @@ func Init(console *nes.NES) *Display {
 	}
 	d.updateDestRect()
 	return d
+}
+
+func (d *Display) SetTargetFPS(fps int32) {
+	rl.SetTargetFPS(fps)
 }
 
 func (d *Display) ProcessInput() {
