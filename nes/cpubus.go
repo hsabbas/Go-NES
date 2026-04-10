@@ -14,7 +14,7 @@ func (cb *cpuBus) read(address uint16) byte {
 	}
 
 	// PPU registers
-	if address < 0x3FFF {
+	if address <= 0x3FFF {
 		address = 0x2000 + (address % 8)
 	}
 

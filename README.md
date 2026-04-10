@@ -22,7 +22,7 @@
 - Controller support ✓
 - Two players ✓
 - NES APU implementation and audio
-- GUI to choose game
+- MMC3 mapper
 
 ## To run the emulator:   
 Clone the repository  
