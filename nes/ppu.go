@@ -273,6 +273,7 @@ func (ppu *ppu) step() bool {
 
 	if prerenderLine {
 		if ppu.cycle == 1 {
+			ppu.spritePixels = make(map[uint16]spritePixel, 64)
 			ppu.vblank = false
 			ppu.sprite0Hit = false
 			ppu.spriteOverflow = false
@@ -392,17 +393,12 @@ func (ppu *ppu) fetchSpriteData() {
 		if ppu.bigSprites {
 			patternAddr = uint16(tileId & ^bit0)<<4 | uint16(tileId&bit0)<<12
 			if flipV {
-				if fineY < 8 {
-					//go to next tile
-					fineY = 7 - fineY
-					patternAddr += 16
+				fineY = 15 - fineY
 				}
-			} else {
 				if fineY > 7 {
-					//go to next tile
+				// go to next tile
 					patternAddr += 16
 					fineY -= 8
-				}
 			}
 			patternAddr += fineY
 		} else {
