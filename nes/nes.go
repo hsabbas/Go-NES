@@ -9,10 +9,10 @@ type NES struct {
 	controller2 *controller
 }
 
-func BootNES(rom []byte) *NES {
+func BootNES(rom []byte) (*NES, error) {
 	mapper, err := createMapper(rom)
 	if err != nil {
-		log.Fatal("Failed to read ROM\n", err)
+		return nil, err
 	}
 
 	controller1 := &controller{}
@@ -38,7 +38,7 @@ func BootNES(rom []byte) *NES {
 		ppu:         ppu,
 		controller1: controller1,
 		controller2: controller2,
-	}
+	}, nil
 }
 
 func (nes *NES) RunFrame() {
