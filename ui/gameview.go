@@ -9,31 +9,34 @@ import (
 
 type gameview struct {
 	console  *nes.NES
+	audio    *audio
 	texture  *rl.Texture2D
 	srcRect  *rl.Rectangle
 	destRect *rl.Rectangle
 
-	colors     []color.RGBA
-	frameReady bool
-
-	firstFrame bool
+	colors []color.RGBA
 }
 
 func createGameView(console *nes.NES) *gameview {
+	a := initAudio()
+	console.SetupAudioOut(sampleRate, a.output)
+
 	img := rl.NewImage(make([]byte, 240*256*4), 256, 240, 1, rl.UncompressedR8g8b8a8)
 	texture := rl.LoadTextureFromImage(img)
 
 	srcRect := rl.NewRectangle(0, 0, 256, 240)
 	destRect := &rl.Rectangle{}
 	view := &gameview{
-		console:    console,
-		texture:    &texture,
-		srcRect:    &srcRect,
-		destRect:   destRect,
-		colors:     make([]color.RGBA, 256*240),
-		firstFrame: true,
+		console:  console,
+		audio:    a,
+		texture:  &texture,
+		srcRect:  &srcRect,
+		destRect: destRect,
+		colors:   make([]color.RGBA, 256*240),
 	}
 	view.updateDestRect()
+
+	a.startAudio()
 	return view
 }
 
@@ -102,7 +105,6 @@ func (g *gameview) pollPlayer2Input() byte {
 
 func (g *gameview) update() {
 	g.console.RunFrame()
-	g.frameReady = true
 }
 
 func (g *gameview) render() {
@@ -110,27 +112,24 @@ func (g *gameview) render() {
 		g.updateDestRect()
 	}
 
-	if g.frameReady {
-		pixels := g.console.GetImage()
+	pixels := g.console.GetImage()
 
-		// Hopefully this can be removed soon. The raylib-go master branch has
-		// support for passing []byte pixel data to UpdateTexture, but current
-		// release only supports []color.RGBA.
-		i := 0
-		for y := range 240 {
-			for x := 0; x < 256; x++ {
-				g.colors[i] = color.RGBA{
-					R: pixels[y][x*3],
-					G: pixels[y][x*3+1],
-					B: pixels[y][x*3+2],
-					A: 255,
-				}
-				i++
+	// Hopefully this can be removed soon. The raylib-go master branch has
+	// support for passing []byte pixel data to UpdateTexture, but current
+	// release only supports []color.RGBA.
+	i := 0
+	for y := range 240 {
+		for x := 0; x < 256; x++ {
+			g.colors[i] = color.RGBA{
+				R: pixels[y][x*3],
+				G: pixels[y][x*3+1],
+				B: pixels[y][x*3+2],
+				A: 255,
 			}
+			i++
 		}
-		rl.UpdateTexture(*g.texture, g.colors)
-		g.frameReady = false
 	}
+	rl.UpdateTexture(*g.texture, g.colors)
 
 	rl.BeginDrawing()
 	rl.DrawTexturePro(*g.texture, *g.srcRect, *g.destRect, rl.NewVector2(0, 0), 0, rl.White)
@@ -157,4 +156,5 @@ func (g *gameview) updateDestRect() {
 
 func (g *gameview) close() {
 	rl.UnloadTexture(*g.texture)
+	g.audio.cleanupAudio()
 }

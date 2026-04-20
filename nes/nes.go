@@ -1,10 +1,12 @@
 package nes
 
-import "log"
+// Adjusted for exact 60 fps. Probably doesn't matter
+const cpuFreq = 1786860
 
 type NES struct {
 	cpu         *cpu
 	ppu         *ppu
+	apu         *apu
 	controller1 *controller
 	controller2 *controller
 }
@@ -23,9 +25,12 @@ func BootNES(rom []byte) (*NES, error) {
 	}
 	ppu := createPPU(ppuBus)
 
+	apu := createAPU()
+
 	cpuBus := &cpuBus{
 		m:           mapper,
 		ppu:         ppu,
+		apu:         apu,
 		controller1: controller1,
 		controller2: controller2,
 	}
@@ -33,9 +38,12 @@ func BootNES(rom []byte) (*NES, error) {
 
 	ppu.setNMICallback(cpu.sendNMI)
 
+	apu.linkCpu(cpu)
+
 	return &NES{
 		cpu:         cpu,
 		ppu:         ppu,
+		apu:         apu,
 		controller1: controller1,
 		controller2: controller2,
 	}, nil
@@ -47,6 +55,7 @@ func (nes *NES) RunFrame() {
 		frameDone = frameDone || nes.ppu.step()
 		frameDone = frameDone || nes.ppu.step()
 		frameDone = frameDone || nes.ppu.step()
+		nes.apu.step()
 		nes.cpu.step()
 	}
 }
@@ -69,4 +78,9 @@ func (nes *NES) UpdatePlayer2Register(register byte) {
 
 func (nes *NES) GetImage() [240][256 * 3]byte {
 	return nes.ppu.frame
+}
+
+func (nes *NES) SetupAudioOut(sampleRate int, output chan float32) {
+	nes.apu.output = output
+	nes.apu.cyclesPerSample = cpuFreq / float64(sampleRate)
 }

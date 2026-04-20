@@ -4,6 +4,7 @@ type cpuBus struct {
 	internalRam [0x800]byte
 	m           mapper
 	ppu         *ppu
+	apu         *apu
 	controller1 *controller
 	controller2 *controller
 }
@@ -30,7 +31,7 @@ func (cb *cpuBus) read(address uint16) byte {
 
 	//APU registers
 	if address == 0x4015 {
-		return 0
+		return cb.apu.readStatus()
 	}
 
 	//Controller registers
@@ -53,46 +54,11 @@ func (cb *cpuBus) write(address uint16, value byte) {
 	if address < 0x2000 {
 		cb.internalRam[address%0x800] = value
 		return
-	}
-
-	if address <= 0x3FFF {
-		address = 0x2000 + (address % 8)
-	}
-
-	//PPU Registers
-	if address == 0x2000 {
-		cb.ppu.writeToPPUCTRL(value)
-	}
-	if address == 0x2001 {
-		cb.ppu.writeToPPUMASK(value)
-	}
-	if address == 0x2003 {
-		cb.ppu.writeToOAMADDR(value)
-	}
-	if address == 0x2004 {
-		cb.ppu.writeToOAMDATA(value)
-	}
-	if address == 0x2005 {
-		cb.ppu.writeToPPUSCROLL(value)
-	}
-	if address == 0x2006 {
-		cb.ppu.writeToPPUADDR(value)
-	}
-	if address == 0x2007 {
-		cb.ppu.writeToPPUDATA(value)
-	}
-
-	//OAMDMA
-	if address == 0x4014 {
-		next := uint16(value) << 8
-		for i := 0; i < 256; i++ {
-			cb.ppu.writeToOAMDATA(cb.internalRam[next])
-			next++
-		}
-	}
-
-	//Controller registers
-	if address == 0x4016 {
+	} else if address <= 0x3FFF {
+		cb.ppu.writeRegister(address, value)
+	} else if address == 0x4014 {
+		cb.oamdma(value)
+	} else if address == 0x4016 {
 		if value&bit0 == bit0 {
 			cb.controller1.startPoll()
 			cb.controller2.startPoll()
@@ -100,10 +66,17 @@ func (cb *cpuBus) write(address uint16, value byte) {
 			cb.controller1.stopPoll()
 			cb.controller2.stopPoll()
 		}
-	}
-
-	//External memory
-	if address >= 0x4020 {
+	} else if address <= 0x4017 {
+		cb.apu.writeRegister(address, value)
+	} else if address >= 0x4020 {
 		cb.m.cpuWrite(address, value)
+	}
+}
+
+func (cb *cpuBus) oamdma(page byte) {
+	next := uint16(page) << 8
+	for i := 0; i < 256; i++ {
+		cb.ppu.writeToOAMDATA(cb.internalRam[next])
+		next++
 	}
 }

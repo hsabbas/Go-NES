@@ -80,6 +80,26 @@ func (ppu *ppu) setNMICallback(callback func()) {
 	ppu.signalNMI = callback
 }
 
+func (ppu *ppu) writeRegister(address uint16, value byte) {
+	address = 0x2000 + (address % 8)
+	switch address {
+	case 0x2000:
+		ppu.writeToPPUCTRL(value)
+	case 0x2001:
+		ppu.writeToPPUMASK(value)
+	case 0x2003:
+		ppu.writeToOAMADDR(value)
+	case 0x2004:
+		ppu.writeToOAMDATA(value)
+	case 0x2005:
+		ppu.writeToPPUSCROLL(value)
+	case 0x2006:
+		ppu.writeToPPUADDR(value)
+	case 0x2007:
+		ppu.writeToPPUDATA(value)
+	}
+}
+
 func (ppu *ppu) writeToPPUCTRL(data byte) {
 	vbNmiWasSet := ppu.vblankNmi
 
