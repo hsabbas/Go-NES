@@ -80,6 +80,26 @@ func (ppu *ppu) setNMICallback(callback func()) {
 	ppu.signalNMI = callback
 }
 
+func (ppu *ppu) writeRegister(address uint16, value byte) {
+	address = 0x2000 + (address % 8)
+	switch address {
+	case 0x2000:
+		ppu.writeToPPUCTRL(value)
+	case 0x2001:
+		ppu.writeToPPUMASK(value)
+	case 0x2003:
+		ppu.writeToOAMADDR(value)
+	case 0x2004:
+		ppu.writeToOAMDATA(value)
+	case 0x2005:
+		ppu.writeToPPUSCROLL(value)
+	case 0x2006:
+		ppu.writeToPPUADDR(value)
+	case 0x2007:
+		ppu.writeToPPUDATA(value)
+	}
+}
+
 func (ppu *ppu) writeToPPUCTRL(data byte) {
 	vbNmiWasSet := ppu.vblankNmi
 
@@ -273,6 +293,7 @@ func (ppu *ppu) step() bool {
 
 	if prerenderLine {
 		if ppu.cycle == 1 {
+			ppu.spritePixels = make(map[uint16]spritePixel, 64)
 			ppu.vblank = false
 			ppu.sprite0Hit = false
 			ppu.spriteOverflow = false
@@ -392,17 +413,12 @@ func (ppu *ppu) fetchSpriteData() {
 		if ppu.bigSprites {
 			patternAddr = uint16(tileId & ^bit0)<<4 | uint16(tileId&bit0)<<12
 			if flipV {
-				if fineY < 8 {
-					//go to next tile
-					fineY = 7 - fineY
-					patternAddr += 16
+				fineY = 15 - fineY
 				}
-			} else {
 				if fineY > 7 {
-					//go to next tile
+				// go to next tile
 					patternAddr += 16
 					fineY -= 8
-				}
 			}
 			patternAddr += fineY
 		} else {

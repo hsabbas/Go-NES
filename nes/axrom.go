@@ -66,3 +66,5 @@ func (a *axrom) ppuWrite(address uint16, value byte) {
 
 	a.c.writeVram(address, value)
 }
+
+func (a *axrom) step() {}

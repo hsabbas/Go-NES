@@ -158,3 +158,5 @@ func (m *mmc1) updateOffsets() {
 		m.chrOffsets[1] = m.chrOffsets[0] + kb4
 	}
 }
+
+func (m *mmc1) step() {}

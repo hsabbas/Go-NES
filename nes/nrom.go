@@ -55,3 +55,5 @@ func (n *nrom) ppuWrite(address uint16, value byte) {
 
 	n.c.writeVram(address, value)
 }
+
+func (n *nrom) step() {}

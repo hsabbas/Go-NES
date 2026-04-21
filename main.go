@@ -1,55 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 
-	"github.com/hsabbas/Go-NES-Emulator/nes"
 	"github.com/hsabbas/Go-NES-Emulator/ui"
 )
 
 func main() {
-	var console *nes.NES
+	var path string
 	if len(os.Args) > 1 {
-		rom, err := os.ReadFile(os.Args[1])
-		if err != nil {
-			panic(err)
-		}
-		console = nes.BootNES(rom)
-	} else {
-		rom, err := loadROM()
-		if err != nil {
-			panic(err)
-		}
-		console = nes.BootNES(rom)
+		path = os.Args[1]
 	}
 
-	display := ui.Init(console)
+	display, err := ui.Init(path)
+	if err != nil {
+		panic(err)
+	}
 	defer display.Close()
 
-	for !display.ShouldClose() {
-		display.ProcessInput()
-
-		console.RunFrame()
-
-		display.Render()
-	}
-}
-
-func loadROM() ([]byte, error) {
-	entries, err := os.ReadDir(".")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, entry := range entries {
-		if entry.Type().IsRegular() {
-			if filepath.Ext(entry.Name()) == ".nes" {
-				return os.ReadFile(entry.Name())
-			}
-		}
-	}
-
-	return nil, fmt.Errorf("cannot find rom")
+	display.SetTargetFPS(60)
+	display.Run()
 }

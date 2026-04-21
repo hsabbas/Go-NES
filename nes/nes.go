@@ -1,18 +1,22 @@
 package nes
 
-import "log"
+// Adjusted for exact 60 fps. Probably doesn't matter
+const cpuFreq = 1786860
 
 type NES struct {
+	mapper      mapper
 	cpu         *cpu
 	ppu         *ppu
+	apu         *apu
 	controller1 *controller
 	controller2 *controller
 }
 
-func BootNES(rom []byte) *NES {
-	mapper, err := createMapper(rom)
+func BootNES(rom []byte) (*NES, error) {
+	nes := &NES{}
+	mapper, err := createMapper(nes, rom)
 	if err != nil {
-		log.Fatal("Failed to read ROM\n", err)
+		return nil, err
 	}
 
 	controller1 := &controller{}
@@ -23,9 +27,12 @@ func BootNES(rom []byte) *NES {
 	}
 	ppu := createPPU(ppuBus)
 
+	apu := createAPU()
+
 	cpuBus := &cpuBus{
 		m:           mapper,
 		ppu:         ppu,
+		apu:         apu,
 		controller1: controller1,
 		controller2: controller2,
 	}
@@ -33,20 +40,27 @@ func BootNES(rom []byte) *NES {
 
 	ppu.setNMICallback(cpu.sendNMI)
 
-	return &NES{
-		cpu:         cpu,
-		ppu:         ppu,
-		controller1: controller1,
-		controller2: controller2,
-	}
+	apu.linkCpu(cpu)
+
+	nes.mapper = mapper
+	nes.cpu = cpu
+	nes.ppu = ppu
+	nes.apu = apu
+	nes.controller1 = controller1
+	nes.controller2 = controller2
+	return nes, nil
 }
 
 func (nes *NES) RunFrame() {
 	frameDone := false
 	for !frameDone {
 		frameDone = frameDone || nes.ppu.step()
+		nes.mapper.step()
 		frameDone = frameDone || nes.ppu.step()
+		nes.mapper.step()
 		frameDone = frameDone || nes.ppu.step()
+		nes.mapper.step()
+		nes.apu.step()
 		nes.cpu.step()
 	}
 }
@@ -55,10 +69,23 @@ func (nes *NES) UpdatePlayer1Button(button Button, pressed bool) {
 	nes.controller1.updateButton(button, pressed)
 }
 
+func (nes *NES) UpdatePlayer2Button(button Button, pressed bool) {
+	nes.controller2.updateButton(button, pressed)
+}
+
 func (nes *NES) UpdatePlayer1Register(register byte) {
 	nes.controller1.updateRegister(register)
 }
 
+func (nes *NES) UpdatePlayer2Register(register byte) {
+	nes.controller2.updateRegister(register)
+}
+
 func (nes *NES) GetImage() [240][256 * 3]byte {
 	return nes.ppu.frame
+}
+
+func (nes *NES) SetupAudioOut(sampleRate int, output chan float32) {
+	nes.apu.output = output
+	nes.apu.cyclesPerSample = cpuFreq / float64(sampleRate)
 }
