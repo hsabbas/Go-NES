@@ -7,8 +7,8 @@
 
 ### Features implemented:
 - CPU with all official opcodes
-- PPU with Graphics using raylib
-- APU with all 5 sound channels
+- Graphics using raylib with a fully implemented PPU
+- Audio from APU with all 5 sound channels complete
 - Two different keyboard layouts as well as controller support
 - Two players
 
@@ -17,13 +17,8 @@
 - Mapper 1 MMC1
 - Mapper 2 UxROM
 - Mapper 3 CNROM
+- Mapper 4 MMC3
 - Mapper 7 AxROM
-
-## Roadmap for Beta release
-- Controller support ✓
-- Two players ✓
-- NES APU implementation and audio ✓
-- MMC3 mapper and IRQ interrupts
 
 ## To run the emulator:   
 Clone the repository  
