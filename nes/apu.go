@@ -597,10 +597,8 @@ type dmc struct {
 	length        uint16
 	bytesLeft     uint16
 	value         byte
-	buffer        byte
 	shiftRegister byte
 	bitsLeft      byte
-	silence       bool
 }
 
 func (d *dmc) clock() {
@@ -643,9 +641,13 @@ func (d *dmc) readAddress() {
 			d.currAddress++
 		}
 		d.bytesLeft--
-		if d.bytesLeft == 0 && d.loop {
-			d.bytesLeft = d.length
-			d.currAddress = d.startAddress
+		if d.bytesLeft == 0 {
+			if d.loop {
+				d.bytesLeft = d.length
+				d.currAddress = d.startAddress
+			} else {
+				d.cpu.sendIRQ()
+			}
 		}
 	}
 }

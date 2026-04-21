@@ -15,6 +15,7 @@ const (
 )
 
 type cartridge struct {
+	nes          *NES
 	mapperNumber int
 	prgBanks     int
 	chrBanks     int
@@ -25,7 +26,7 @@ type cartridge struct {
 	vram         [0x800]byte
 }
 
-func readCartridge(rom []byte) (*cartridge, error) {
+func readCartridge(nes *NES, rom []byte) (*cartridge, error) {
 	if rom[0] != 0x4E || rom[1] != 0x45 || rom[2] != 0x53 || rom[3] != 0x1A {
 		return nil, fmt.Errorf("malformed .NES header")
 	}
@@ -68,6 +69,7 @@ func readCartridge(rom []byte) (*cartridge, error) {
 	}
 
 	return &cartridge{
+		nes:          nes,
 		mapperNumber: mapperNum,
 		prgBanks:     prgBanks,
 		chrBanks:     chrBanks,

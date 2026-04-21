@@ -58,7 +58,10 @@ func (c *cnrom) ppuWrite(address uint16, value byte) {
 
 	if address < 0x2000 {
 		c.c.chr[address+uint16(c.chrBank)*kb8] = value
+		return
 	}
 
 	c.c.writeVram(address, value)
 }
+
+func (c *cnrom) step() {}

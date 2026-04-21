@@ -694,7 +694,7 @@ func (cpu *cpu) sendNMI() {
 }
 
 func (cpu *cpu) sendIRQ() {
-	cpu.irqPending = true
+	cpu.irqPending = true && !cpu.i
 }
 
 func (cpu *cpu) interrupt() {

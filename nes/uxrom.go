@@ -70,3 +70,5 @@ func (u *uxrom) ppuWrite(address uint16, value byte) {
 
 	u.c.writeVram(address, value)
 }
+
+func (u *uxrom) step() {}
