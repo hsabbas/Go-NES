@@ -92,3 +92,7 @@ func loadROM(romPath string) ([]byte, error) {
 
 	return nil, fmt.Errorf("cannot find rom")
 }
+
+func isNesRom(name string) bool {
+	return filepath.Ext(name) == ".nes"
+}
