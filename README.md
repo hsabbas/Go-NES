@@ -20,6 +20,11 @@
 - Mapper 4 MMC3
 - Mapper 7 AxROM
 
+### Full release roadmap:
+- GUI for choosing nes files
+- Save feature
+- Build automation for easier download and use
+
 ## To run the emulator:   
 Clone the repository  
 Enable CGo to build with raylib:  
