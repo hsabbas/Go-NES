@@ -646,7 +646,9 @@ func (d *dmc) readAddress() {
 				d.bytesLeft = d.length
 				d.currAddress = d.startAddress
 			} else {
-				d.cpu.sendIRQ()
+				if d.irqEnable {
+					d.cpu.sendIRQ()
+				}
 			}
 		}
 	}
