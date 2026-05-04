@@ -23,8 +23,6 @@ func createMMC3Mapper(c *cartridge) *mmc3 {
 		prgOffsets: make([]int, 4),
 		chrOffsets: make([]int, 8),
 	}
-	m.banks[6] = 0
-	m.banks[7] = 1
 	m.updateOffsets()
 	return m
 }
@@ -124,14 +122,7 @@ func (m *mmc3) writeBankSelect(value byte) {
 }
 
 func (m *mmc3) writeBankData(value byte) {
-	if m.selectedBank > 5 {
-		m.banks[m.selectedBank] = value & 0x3F
-	}
-	if m.selectedBank < 3 {
-		m.banks[m.selectedBank] = value & 0xFE
-	} else {
-		m.banks[m.selectedBank] = value
-	}
+	m.banks[m.selectedBank] = value
 	m.updateOffsets()
 }
 
