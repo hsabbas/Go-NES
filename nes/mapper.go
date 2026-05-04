@@ -33,5 +33,5 @@ func createMapper(nes *NES, rom []byte) (mapper, error) {
 		return createAxromMapper(cart), nil
 	}
 
-	return nil, fmt.Errorf("unknown mapper number: %d", cart.mapperNumber)
+	return nil, fmt.Errorf("unsupported mapper number: %d", cart.mapperNumber)
 }

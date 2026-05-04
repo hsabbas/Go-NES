@@ -1,10 +1,8 @@
 package ui
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 
 	rl "github.com/gen2brain/raylib-go/raylib"
 	"github.com/hsabbas/Go-NES-Emulator/nes"
@@ -23,21 +21,21 @@ type Display struct {
 
 func Init(romPath string) (*Display, error) {
 	rl.SetConfigFlags(rl.FlagWindowResizable)
-	rl.InitWindow(256*3, 240*3, "NES Emulator by Hassan :)")
+	rl.InitWindow(256*3, 240*3, "Go-NES")
 
 	d := &Display{}
 
-	rom, err := loadROM(romPath)
-	if err != nil {
-		return nil, err
+	if isNesRom(romPath) {
+		gameview, err := startGameEarly(romPath)
+		if err == nil {
+			d.view = gameview
+			return d, nil
+		}
+		log.Println("Failed to start with given ROM:", err)
 	}
 
-	console, err := nes.BootNES(rom)
-	if err != nil {
-		return nil, err
-	}
+	d.view = createMenuView(romPath, d.startGameView)
 
-	d.view = createGameView(console)
 	return d, nil
 }
 
@@ -53,14 +51,14 @@ func (d *Display) Run() {
 	}
 }
 
-func (d *Display) startGameView(rom []byte) {
+func (d *Display) startGameView(rom []byte) error {
 	console, err := nes.BootNES(rom)
 	if err != nil {
-		log.Println("failed to boot NES")
-		return
+		return err
 	}
 	d.view.close()
 	d.view = createGameView(console)
+	return nil
 }
 
 func (d *Display) ShouldClose() bool {
@@ -72,27 +70,16 @@ func (d *Display) Close() {
 	rl.CloseWindow()
 }
 
-func loadROM(romPath string) ([]byte, error) {
-	if isNesRom(romPath) {
-		return os.ReadFile(romPath)
-	}
-
-	entries, err := os.ReadDir(".")
+func startGameEarly(romPath string) (*gameview, error) {
+	rom, err := os.ReadFile(romPath)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, entry := range entries {
-		if entry.Type().IsRegular() {
-			if filepath.Ext(entry.Name()) == ".nes" {
-				return os.ReadFile(entry.Name())
-			}
-		}
+	console, err := nes.BootNES(rom)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("cannot find rom")
-}
-
-func isNesRom(name string) bool {
-	return filepath.Ext(name) == ".nes"
+	return createGameView(console), nil
 }

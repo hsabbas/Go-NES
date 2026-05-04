@@ -132,6 +132,7 @@ func (g *gameview) render() {
 	rl.UpdateTexture(*g.texture, g.colors)
 
 	rl.BeginDrawing()
+	rl.ClearBackground(rl.Black)
 	rl.DrawTexturePro(*g.texture, *g.srcRect, *g.destRect, rl.NewVector2(0, 0), 0, rl.White)
 	rl.EndDrawing()
 }
