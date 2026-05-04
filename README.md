@@ -21,9 +21,10 @@
 - Mapper 7 AxROM
 
 ### Full release roadmap:
-- GUI for choosing nes files
-- Save feature
+- GUI for choosing nes files ✓
 - Build automation for easier download and use
+- Save feature
+- Better menus
 
 ## To run the emulator:   
 Clone the repository  
