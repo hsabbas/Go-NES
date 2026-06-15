@@ -81,7 +81,7 @@ func (nes *NES) UpdatePlayer2Register(register byte) {
 	nes.controller2.updateRegister(register)
 }
 
-func (nes *NES) GetImage() [240][256 * 3]byte {
+func (nes *NES) GetImage() [240 * 256 * 3]byte {
 	return nes.ppu.frame
 }
 

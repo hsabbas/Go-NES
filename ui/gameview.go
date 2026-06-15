@@ -21,7 +21,7 @@ func createGameView(console *nes.NES) *gameview {
 	a := initAudio()
 	console.SetupAudioOut(sampleRate, a.output)
 
-	img := rl.NewImage(make([]byte, 240*256*4), 256, 240, 1, rl.UncompressedR8g8b8a8)
+	img := rl.NewImage(make([]byte, 240*256*3), 256, 240, 1, rl.UncompressedR8g8b8)
 	texture := rl.LoadTextureFromImage(img)
 
 	srcRect := rl.NewRectangle(0, 0, 256, 240)
@@ -113,23 +113,7 @@ func (g *gameview) render() {
 	}
 
 	pixels := g.console.GetImage()
-
-	// Hopefully this can be removed soon. The raylib-go master branch has
-	// support for passing []byte pixel data to UpdateTexture, but current
-	// release only supports []color.RGBA.
-	i := 0
-	for y := range 240 {
-		for x := 0; x < 256; x++ {
-			g.colors[i] = color.RGBA{
-				R: pixels[y][x*3],
-				G: pixels[y][x*3+1],
-				B: pixels[y][x*3+2],
-				A: 255,
-			}
-			i++
-		}
-	}
-	rl.UpdateTexture(*g.texture, g.colors)
+	rl.UpdateTexture(*g.texture, pixels[:])
 
 	rl.BeginDrawing()
 	rl.ClearBackground(rl.Black)

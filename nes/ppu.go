@@ -65,7 +65,7 @@ type ppu struct {
 	evenFrame bool
 
 	paletteVals [240][256]uint16
-	frame       [240][256 * 3]byte
+	frame       [240 * 256 * 3]byte
 
 	signalNMI func()
 }
@@ -216,9 +216,9 @@ func (ppu *ppu) endFrame() {
 
 	for y := 0; y < 240; y++ {
 		for x, val := range ppu.paletteVals[y] {
-			ppu.frame[y][x*3] = colorMap[val].r
-			ppu.frame[y][x*3+1] = colorMap[val].g
-			ppu.frame[y][x*3+2] = colorMap[val].b
+			ppu.frame[y*256*3+x*3] = colorMap[val].r
+			ppu.frame[y*256*3+x*3+1] = colorMap[val].g
+			ppu.frame[y*256*3+x*3+2] = colorMap[val].b
 		}
 	}
 }

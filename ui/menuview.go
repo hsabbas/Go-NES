@@ -153,11 +153,11 @@ func (mv *menuview) render() {
 		rl.Rectangle{X: 48, Y: 96, Width: 512, Height: 16},
 		"#121#",
 	)
-	mv.listViewActive = gui.ListView(
+	gui.ListView(
 		rl.Rectangle{X: 48, Y: 112, Width: 512, Height: 512},
 		mv.listViewStr,
 		&mv.listViewScroll,
-		mv.listViewActive,
+		&mv.listViewActive,
 	)
 
 	y := int32(194)
