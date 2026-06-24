@@ -36,6 +36,7 @@ func createCPU(mem *cpuBus) *cpu {
 	cpu := &cpu{
 		bus: mem,
 		i:   true,
+		s:   0xFD,
 	}
 
 	cpu.pc = cpu.readAddress(resetVector)
